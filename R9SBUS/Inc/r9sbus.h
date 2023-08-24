@@ -24,18 +24,20 @@
 											HAL_NVIC_SetPriority(USART1_IRQn, 15, 0); \
 											HAL_NVIC_EnableIRQ(USART1_IRQn); \
 										} while(0U)
-#define R9SBUS_DATASIZE				25 //25
+#define R9SBUS_DATASIZE				25
+#define R9SBUS_BUFFERSIZE			50
 
 
 
 typedef struct
 {
 	uint8_t							frame_lost;
-	uint8_t                         buffer[R9SBUS_DATASIZE];
+	uint8_t                         buffer[R9SBUS_BUFFERSIZE];
 	uint16_t						channels[16];
 	uint8_t	 						ch17, ch18;
 	uint8_t							failsafe;
 	uint8_t							endbyte;
+	uint8_t							dataupdated;
 }sR9SBUS_data;
 
 
@@ -45,6 +47,8 @@ void R9SBUS_Init(void);
 void R9SBUS_GPIOInit(void);
 void R9SBUS_RX_START_IT(void);
 void R9SBUS_Parse_RXData(void);
+void R9SBUS_RX_STARTtoIDLE_IT(void);
+void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size);
 
 UART_HandleTypeDef hR9SBUS;
 

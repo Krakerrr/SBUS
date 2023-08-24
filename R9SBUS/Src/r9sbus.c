@@ -4,12 +4,26 @@
 
 #include "r9sbus.h"
 
+
+void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+	if (huart->Instance == R9SBUS_CHANNEL) {
+		UARTprintmsg("recieved data size: %d\r\n",Size);
+		if( Size == 25)
+		{
+			R9SBUS_Parse_RXData();
+		}
+		R9SBUS_RX_STARTtoIDLE_IT();
+	}
+
+}
 void R9SBUS_RX_STARTtoIDLE_IT(void)
 {
 	if( HAL_UARTEx_ReceiveToIdle_IT(&hR9SBUS, R9SBUS_data.buffer, R9SBUS_DATASIZE) != HAL_OK)
 	{
 		UARTprintmsg("Error in R9SBUS_RX_STARTtoIDLE_IT\r\n");
 	}
+//	__HAL_UART_DISABLE_IT(&hR9SBUS, ( UART_IT_PE) );
 
 }
 
@@ -21,6 +35,7 @@ void R9SBUS_RX_START_IT(void)
 	}
 
 }
+
 
 
 void R9SBUS_Parse_RXData(void)
@@ -54,18 +69,6 @@ void R9SBUS_Parse_RXData(void)
 	R9SBUS_data.failsafe = R9SBUS_data.buffer[23] & 0x08;
 	/*End byte */
 	R9SBUS_data.endbyte = !(R9SBUS_data.buffer[25]);
-
-	//	if( R9SBUS_data.buffer[23] & (0x04)) {
-	//		R9SBUS_data.frame_lost = TRUE;
-	//	} else {
-	//		R9SBUS_data.frame_lost = FALSE;
-	//	}
-	//
-	//	if( R9SBUS_data.buffer[23] & (0x08)) {
-	//		R9SBUS_data.failsafe = TRUE;
-	//	} else {
-	//		R9SBUS_data.failsafe = FALSE;
-	//	}
 }
 
 void R9SBUS_Init(void)
