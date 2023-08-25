@@ -49,6 +49,7 @@ void R9SBUS_RX_START_IT(void);
 void R9SBUS_Parse_RXData(void);
 void R9SBUS_RX_STARTtoIDLE_IT(void);
 void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size);
+void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart);
 
 UART_HandleTypeDef hR9SBUS;
 
