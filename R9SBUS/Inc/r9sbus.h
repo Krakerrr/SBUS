@@ -26,6 +26,13 @@
 										} while(0U)
 #define R9SBUS_DATASIZE				25
 #define R9SBUS_BUFFERSIZE			50
+#define R9SBUS_CHANNELSIZE			50
+
+
+#define R9SBUS_RECV_MIN           172.0f
+#define R9SBUS_RECV_MAX           1811.0f
+#define R9SBUS_OUT_MIN            -100.0f
+#define R9SBUS_OUT_MAX            100.0f
 
 
 
@@ -33,11 +40,13 @@ typedef struct
 {
 	uint8_t							frame_lost;
 	uint8_t                         buffer[R9SBUS_BUFFERSIZE];
-	uint16_t						channels[16];
+	uint16_t						channels_raw[R9SBUS_CHANNELSIZE];
+	float							channels[R9SBUS_CHANNELSIZE];
 	uint8_t	 						ch17, ch18;
 	uint8_t							failsafe;
+	uint8_t							startbyte;
 	uint8_t							endbyte;
-	uint8_t							dataupdated;
+	uint8_t							status;
 }sR9SBUS_data;
 
 
@@ -47,6 +56,7 @@ void R9SBUS_Init(void);
 void R9SBUS_GPIOInit(void);
 void R9SBUS_RX_START_IT(void);
 void R9SBUS_Parse_RXData(void);
+void R9SBUS_Map_Channels(void);
 void R9SBUS_RX_STARTtoIDLE_IT(void);
 void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size);
 void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart);

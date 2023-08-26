@@ -4,6 +4,10 @@
 
 #include "r9sbus.h"
 
+const float R9SBUS_gain   = (R9SBUS_OUT_MAX - R9SBUS_OUT_MIN) / (R9SBUS_RECV_MAX - R9SBUS_RECV_MIN) ;
+const float R9SBUS_offset = R9SBUS_OUT_MIN - R9SBUS_gain * R9SBUS_RECV_MIN;
+
+
 void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart)
 {
 	if(huart->Instance == R9SBUS_CHANNEL)
@@ -41,7 +45,6 @@ void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 	if (huart->Instance == R9SBUS_CHANNEL) {
 		if( Size == 25)
 		{
-			R9SBUS_data.dataupdated = 1;
 			R9SBUS_Parse_RXData();
 		}
 		R9SBUS_RX_STARTtoIDLE_IT();
@@ -50,6 +53,7 @@ void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 }
 void R9SBUS_RX_STARTtoIDLE_IT(void)
 {
+	R9SBUS_data.status = 0;
 	if( HAL_UARTEx_ReceiveToIdle_IT(&hR9SBUS, R9SBUS_data.buffer, R9SBUS_DATASIZE) != HAL_OK)
 	{
 		UARTprintmsg("Error in R9SBUS_RX_STARTtoIDLE_IT\r\n");
@@ -59,34 +63,54 @@ void R9SBUS_RX_STARTtoIDLE_IT(void)
 
 void R9SBUS_RX_START_IT(void)
 {
+	R9SBUS_data.status = 0;
 	if( HAL_UART_Receive_IT(&hR9SBUS, R9SBUS_data.buffer, R9SBUS_DATASIZE) != HAL_OK)
 	{
 		UARTprintmsg("Error in R9SBUS_RX_START_IT\r\n");
 	}
 }
 
+void R9SBUS_Map_Channels(void)
+{
+	for (uint8_t i = 0;  i < R9SBUS_CHANNELSIZE; ++ i)
+	{
+		R9SBUS_data.channels[i] = R9SBUS_gain * (float)R9SBUS_data.channels_raw[i] + R9SBUS_offset;
+	}
+}
 
 
+void R9SBUS_Validate_RXData(void)
+{
+	if( (R9SBUS_data.startbyte == 0x0f) && !R9SBUS_data.endbyte && !R9SBUS_data.frame_lost && !R9SBUS_data.failsafe)
+	{
+		R9SBUS_data.status = 0;
+	}else
+	{
+		R9SBUS_data.status = 1;
+	}
+}
 
 void R9SBUS_Parse_RXData(void)
 {
 	// Decode the 16 regular channels
-	R9SBUS_data.channels[0]  = (((uint16_t)R9SBUS_data.buffer[1])       | ((uint16_t)R9SBUS_data.buffer[2] << 8) ) & 0x07FF;
-	R9SBUS_data.channels[1]  = (((uint16_t)R9SBUS_data.buffer[2] >> 3)  | ((uint16_t)R9SBUS_data.buffer[3] << 5)) & 0x07FF;
-	R9SBUS_data.channels[2]  = (((uint16_t)R9SBUS_data.buffer[3] >> 6)  | ((uint16_t)R9SBUS_data.buffer[4] << 2) | ((uint16_t)R9SBUS_data.buffer[5] << 10)) & 0x07FF;
-	R9SBUS_data.channels[3]  = (((uint16_t)R9SBUS_data.buffer[5] >> 1)  | ((uint16_t)R9SBUS_data.buffer[6] << 7)) & 0x07FF;
-	R9SBUS_data.channels[4]  = (((uint16_t)R9SBUS_data.buffer[6] >> 4)  | ((uint16_t)R9SBUS_data.buffer[7] << 4)) & 0x07FF;
-	R9SBUS_data.channels[5]  = (((uint16_t)R9SBUS_data.buffer[7] >> 7)  | ((uint16_t)R9SBUS_data.buffer[8] << 1) | ((uint16_t)R9SBUS_data.buffer[9] << 9)) & 0x07FF;
-	R9SBUS_data.channels[6]  = (((uint16_t)R9SBUS_data.buffer[9] >> 2)  | ((uint16_t)R9SBUS_data.buffer[10] << 6)) & 0x07FF;
-	R9SBUS_data.channels[7]  = (((uint16_t)R9SBUS_data.buffer[10] >> 5) | ((uint16_t)R9SBUS_data.buffer[11] << 3)) & 0x07FF;
-	R9SBUS_data.channels[8]  = (((uint16_t)R9SBUS_data.buffer[12])      | ((uint16_t)R9SBUS_data.buffer[13] << 8)) & 0x07FF;
-	R9SBUS_data.channels[9]  = (((uint16_t)R9SBUS_data.buffer[13] >> 3) | ((uint16_t)R9SBUS_data.buffer[14] << 5)) & 0x07FF;
-	R9SBUS_data.channels[10] = (((uint16_t)R9SBUS_data.buffer[14] >> 6) | ((uint16_t)R9SBUS_data.buffer[15] << 2) | ((uint16_t)R9SBUS_data.buffer[16] << 10)) & 0x07FF;
-	R9SBUS_data.channels[11] = (((uint16_t)R9SBUS_data.buffer[16] >> 1) | ((uint16_t)R9SBUS_data.buffer[17] << 7)) & 0x07FF;
-	R9SBUS_data.channels[12] = (((uint16_t)R9SBUS_data.buffer[17] >> 4) | ((uint16_t)R9SBUS_data.buffer[18] << 4)) & 0x07FF;
-	R9SBUS_data.channels[13] = (((uint16_t)R9SBUS_data.buffer[18] >> 7) | ((uint16_t)R9SBUS_data.buffer[19] << 1) | ((uint16_t)R9SBUS_data.buffer[20] << 9)) & 0x07FF;
-	R9SBUS_data.channels[14] = (((uint16_t)R9SBUS_data.buffer[20] >> 2) | ((uint16_t)R9SBUS_data.buffer[21] << 6)) & 0x07FF;
-	R9SBUS_data.channels[15] = (((uint16_t)R9SBUS_data.buffer[21] >> 5) | ((uint16_t)R9SBUS_data.buffer[22] << 3)) & 0x07FF;
+	R9SBUS_data.channels_raw[0]  = (((uint16_t)R9SBUS_data.buffer[1])       | ((uint16_t)R9SBUS_data.buffer[2] << 8) ) & 0x07FF;
+	R9SBUS_data.channels_raw[1]  = (((uint16_t)R9SBUS_data.buffer[2] >> 3)  | ((uint16_t)R9SBUS_data.buffer[3] << 5)) & 0x07FF;
+	R9SBUS_data.channels_raw[2]  = (((uint16_t)R9SBUS_data.buffer[3] >> 6)  | ((uint16_t)R9SBUS_data.buffer[4] << 2) | ((uint16_t)R9SBUS_data.buffer[5] << 10)) & 0x07FF;
+	R9SBUS_data.channels_raw[3]  = (((uint16_t)R9SBUS_data.buffer[5] >> 1)  | ((uint16_t)R9SBUS_data.buffer[6] << 7)) & 0x07FF;
+	R9SBUS_data.channels_raw[4]  = (((uint16_t)R9SBUS_data.buffer[6] >> 4)  | ((uint16_t)R9SBUS_data.buffer[7] << 4)) & 0x07FF;
+	R9SBUS_data.channels_raw[5]  = (((uint16_t)R9SBUS_data.buffer[7] >> 7)  | ((uint16_t)R9SBUS_data.buffer[8] << 1) | ((uint16_t)R9SBUS_data.buffer[9] << 9)) & 0x07FF;
+	R9SBUS_data.channels_raw[6]  = (((uint16_t)R9SBUS_data.buffer[9] >> 2)  | ((uint16_t)R9SBUS_data.buffer[10] << 6)) & 0x07FF;
+	R9SBUS_data.channels_raw[7]  = (((uint16_t)R9SBUS_data.buffer[10] >> 5) | ((uint16_t)R9SBUS_data.buffer[11] << 3)) & 0x07FF;
+	R9SBUS_data.channels_raw[8]  = (((uint16_t)R9SBUS_data.buffer[12])      | ((uint16_t)R9SBUS_data.buffer[13] << 8)) & 0x07FF;
+	R9SBUS_data.channels_raw[9]  = (((uint16_t)R9SBUS_data.buffer[13] >> 3) | ((uint16_t)R9SBUS_data.buffer[14] << 5)) & 0x07FF;
+	R9SBUS_data.channels_raw[10] = (((uint16_t)R9SBUS_data.buffer[14] >> 6) | ((uint16_t)R9SBUS_data.buffer[15] << 2) | ((uint16_t)R9SBUS_data.buffer[16] << 10)) & 0x07FF;
+	R9SBUS_data.channels_raw[11] = (((uint16_t)R9SBUS_data.buffer[16] >> 1) | ((uint16_t)R9SBUS_data.buffer[17] << 7)) & 0x07FF;
+	R9SBUS_data.channels_raw[12] = (((uint16_t)R9SBUS_data.buffer[17] >> 4) | ((uint16_t)R9SBUS_data.buffer[18] << 4)) & 0x07FF;
+	R9SBUS_data.channels_raw[13] = (((uint16_t)R9SBUS_data.buffer[18] >> 7) | ((uint16_t)R9SBUS_data.buffer[19] << 1) | ((uint16_t)R9SBUS_data.buffer[20] << 9)) & 0x07FF;
+	R9SBUS_data.channels_raw[14] = (((uint16_t)R9SBUS_data.buffer[20] >> 2) | ((uint16_t)R9SBUS_data.buffer[21] << 6)) & 0x07FF;
+	R9SBUS_data.channels_raw[15] = (((uint16_t)R9SBUS_data.buffer[21] >> 5) | ((uint16_t)R9SBUS_data.buffer[22] << 3)) & 0x07FF;
+
+	R9SBUS_Map_Channels();
 
 	/* CH 17 */
 	R9SBUS_data.ch17 = R9SBUS_data.buffer[23] & 0x01;
@@ -97,8 +121,14 @@ void R9SBUS_Parse_RXData(void)
 	R9SBUS_data.frame_lost = R9SBUS_data.buffer[23] & 0x04;
 	/* Grab the failsafe */
 	R9SBUS_data.failsafe = R9SBUS_data.buffer[23] & 0x08;
+	/*Start byte */
+	R9SBUS_data.startbyte = R9SBUS_data.buffer[0];
 	/*End byte */
 	R9SBUS_data.endbyte = R9SBUS_data.buffer[25];
+
+
+	R9SBUS_Map_Channels();
+	R9SBUS_Validate_RXData();
 }
 
 void R9SBUS_Init(void)
