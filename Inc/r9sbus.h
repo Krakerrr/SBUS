@@ -53,7 +53,7 @@ typedef struct
 extern sR9SBUS_data R9SBUS_data;
 
 void R9SBUS_Init(void);
-void R9SBUS_GPIOInit(void);
+void R9SBUS_GPIOInit(UART_HandleTypeDef *huart);
 void R9SBUS_RX_START_IT(void);
 void R9SBUS_Parse_RXData(void);
 void R9SBUS_Map_Channels(void);

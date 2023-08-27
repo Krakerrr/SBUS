@@ -43,7 +43,7 @@ void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart)
 void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
 	if (huart->Instance == R9SBUS_CHANNEL) {
-		if( Size == 25)
+		if( Size == R9SBUS_DATASIZE)
 		{
 			R9SBUS_Parse_RXData();
 		}
@@ -83,10 +83,10 @@ void R9SBUS_Validate_RXData(void)
 {
 	if( (R9SBUS_data.startbyte == 0x0f) && !R9SBUS_data.endbyte && !R9SBUS_data.frame_lost && !R9SBUS_data.failsafe)
 	{
-		R9SBUS_data.status = 0;
+		R9SBUS_data.status = 1;
 	}else
 	{
-		R9SBUS_data.status = 1;
+		R9SBUS_data.status = 0;
 	}
 }
 
@@ -148,22 +148,25 @@ void R9SBUS_Init(void)
 	}
 }
 
-void R9SBUS_GPIOInit(void)
+void R9SBUS_GPIOInit(UART_HandleTypeDef *huart)
 {
-	GPIO_InitTypeDef gpio_uart;
+	if(huart->Instance == R9SBUS_CHANNEL)
+	{
+		GPIO_InitTypeDef gpio_uart;
 
-	//	1. enable peripheral clock usart and gpioa
-	__R9SBUS_CLK_ENABLE();
+		//	1. enable peripheral clock usart and gpioa
+		__R9SBUS_CLK_ENABLE();
 
-	//	2. pin muxing configurations (tx rx pins / 2gpios : alternate func. -> UART)
-	gpio_uart.Pin   	= R9SBUS_RXPIN;
-	gpio_uart.Mode  	= GPIO_MODE_AF_PP;
-	gpio_uart.Pull  	= GPIO_PULLUP;
-	gpio_uart.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
-	gpio_uart.Alternate = R9SBUS_GPIO_AF;
-	HAL_GPIO_Init( R9SBUS_GPIO, &gpio_uart);
+		//	2. pin muxing configurations (tx rx pins / 2gpios : alternate func. -> UART)
+		gpio_uart.Pin   	= R9SBUS_RXPIN;
+		gpio_uart.Mode  	= GPIO_MODE_AF_PP;
+		gpio_uart.Pull  	= GPIO_PULLUP;
+		gpio_uart.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
+		gpio_uart.Alternate = R9SBUS_GPIO_AF;
+		HAL_GPIO_Init( R9SBUS_GPIO, &gpio_uart);
 
-	//	3. set priority
-	//	4. enable peripheral irq in the nvic
-	__R9SBUS_NVIC_ENABLE();
+		//	3. set priority
+		//	4. enable peripheral irq in the nvic
+		__R9SBUS_NVIC_ENABLE();
+	}
 }
