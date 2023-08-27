@@ -26,7 +26,7 @@
 										} while(0U)
 #define R9SBUS_DATASIZE				25
 #define R9SBUS_BUFFERSIZE			50
-#define R9SBUS_CHANNELSIZE			50
+#define R9SBUS_CHANNELSIZE			16
 
 
 #define R9SBUS_RECV_MIN           172.0f
