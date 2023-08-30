@@ -21,7 +21,7 @@
 											__HAL_RCC_GPIOA_CLK_ENABLE(); \
 										} while(0U)
 #define __R9SBUS_NVIC_ENABLE()   	do { \
-											HAL_NVIC_SetPriority(USART1_IRQn, 15, 0); \
+											HAL_NVIC_SetPriority(USART1_IRQn, 14, 0); \
 											HAL_NVIC_EnableIRQ(USART1_IRQn); \
 										} while(0U)
 #define R9SBUS_DATASIZE				25
