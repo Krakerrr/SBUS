@@ -15,25 +15,25 @@ void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart)
 		if(huart->ErrorCode & HAL_UART_ERROR_PE)
 		{
 			/* Parity error */
-			UARTprintmsg("Parity error \n");
+			RF_SendMsg("Parity error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_NE)
 		{
 			/* noise error */
-			UARTprintmsg("noise error \n");
+			RF_SendMsg("noise error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_FE)
 		{
 			/* frame error */
-			UARTprintmsg("frame error \n");
+			RF_SendMsg("frame error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_ORE)
 		{
 			/* overrun error */
-			UARTprintmsg("overrun error \n");
+			RF_SendMsg("overrun error \n");
 		}
 
 		R9SBUS_RX_STARTtoIDLE_IT();
@@ -49,16 +49,15 @@ void R9SBUS_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		}
 		R9SBUS_RX_STARTtoIDLE_IT();
 	}
-
 }
+
 void R9SBUS_RX_STARTtoIDLE_IT(void)
 {
 	R9SBUS_data.status = 0;
 	if( HAL_UARTEx_ReceiveToIdle_IT(&hR9SBUS, R9SBUS_data.buffer, R9SBUS_DATASIZE) != HAL_OK)
 	{
-		UARTprintmsg("Error in R9SBUS_RX_STARTtoIDLE_IT\r\n");
+		RF_SendMsg("Error in R9SBUS_RX_STARTtoIDLE_IT\r\n");
 	}
-
 }
 
 void R9SBUS_RX_START_IT(void)
@@ -66,7 +65,7 @@ void R9SBUS_RX_START_IT(void)
 	R9SBUS_data.status = 0;
 	if( HAL_UART_Receive_IT(&hR9SBUS, R9SBUS_data.buffer, R9SBUS_DATASIZE) != HAL_OK)
 	{
-		UARTprintmsg("Error in R9SBUS_RX_START_IT\r\n");
+		RF_SendMsg("Error in R9SBUS_RX_START_IT\r\n");
 	}
 }
 
@@ -143,7 +142,7 @@ void R9SBUS_Init(void)
 	hR9SBUS.Init.OverSampling 	= UART_OVERSAMPLING_8;
 	if ( HAL_UART_Init(&hR9SBUS) != HAL_OK )
 	{
-		UARTprintmsg("Error in UARTR9SBUS_Init\r\n");
+		RF_SendMsg("Error in UARTR9SBUS_Init\r\n");
 		Error_Handler();
 	}
 }

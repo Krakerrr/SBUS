@@ -21,7 +21,7 @@
 											__HAL_RCC_GPIOA_CLK_ENABLE(); \
 										} while(0U)
 #define __R9SBUS_NVIC_ENABLE()   	do { \
-											HAL_NVIC_SetPriority(USART1_IRQn, 14, 0); \
+											HAL_NVIC_SetPriority(USART1_IRQn, 10, 0); \
 											HAL_NVIC_EnableIRQ(USART1_IRQn); \
 										} while(0U)
 #define R9SBUS_DATASIZE				25
@@ -47,10 +47,10 @@ typedef struct
 	uint8_t							startbyte;
 	uint8_t							endbyte;
 	uint8_t							status;
-}sR9SBUS_data;
+}sR9SBUS;
 
 
-extern sR9SBUS_data R9SBUS_data;
+extern sR9SBUS R9SBUS_data;
 
 void R9SBUS_Init(void);
 void R9SBUS_GPIOInit(UART_HandleTypeDef *huart);
