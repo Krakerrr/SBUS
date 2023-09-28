@@ -15,25 +15,25 @@ void R9SBUS_ErrorCallback(UART_HandleTypeDef *huart)
 		if(huart->ErrorCode & HAL_UART_ERROR_PE)
 		{
 			/* Parity error */
-			RF_SendMsg("Parity error \n");
+//			RF_SendMsg("Parity error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_NE)
 		{
 			/* noise error */
-			RF_SendMsg("noise error \n");
+//			RF_SendMsg("noise error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_FE)
 		{
 			/* frame error */
-			RF_SendMsg("frame error \n");
+//			RF_SendMsg("frame error \n");
 		}
 
 		if(huart->ErrorCode & HAL_UART_ERROR_ORE)
 		{
 			/* overrun error */
-			RF_SendMsg("overrun error \n");
+//			RF_SendMsg("overrun error \n");
 		}
 
 		R9SBUS_RX_STARTtoIDLE_IT();
@@ -142,8 +142,7 @@ void R9SBUS_Init(void)
 	hR9SBUS.Init.OverSampling 	= UART_OVERSAMPLING_8;
 	if ( HAL_UART_Init(&hR9SBUS) != HAL_OK )
 	{
-		RF_SendMsg("Error in UARTR9SBUS_Init\r\n");
-		Error_Handler();
+		Error_Handler(E_SBUSInit);
 	}
 }
 
